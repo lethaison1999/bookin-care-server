@@ -1,8 +1,8 @@
-import specialtyService from '../services/specialtyService';
+import clinicService from '../services/clinicService';
 
-const postNewSpecialty = async (req, res) => {
+const postNewClinic = async (req, res) => {
   try {
-    let response = await specialtyService.postNewSpecialtyService(req.body);
+    let response = await clinicService.postNewClinicService(req.body);
     if (response && response.errCode === 0) {
       return res.status(200).json(response);
     }
@@ -14,9 +14,9 @@ const postNewSpecialty = async (req, res) => {
     });
   }
 };
-const getAllSpecialty = async (req, res) => {
+const getAllClinic = async (req, res) => {
   try {
-    let response = await specialtyService.getAllSpecialtySercive();
+    let response = await clinicService.getAllClinicServive();
     if (response && response.errCode === 0) {
       return res.status(200).json(response);
     }
@@ -28,9 +28,9 @@ const getAllSpecialty = async (req, res) => {
     });
   }
 };
-const getDetailSpecialtyById = async (req, res) => {
+const getDetailClinicById = async (req, res) => {
   try {
-    let response = await specialtyService.getDetailSpecialtyByIdService(req.query.id, req.query.location);
+    let response = await clinicService.getDetailClinicByIdService(req.query.id);
     if (response && response.errCode === 0) {
       return res.status(200).json(response);
     }
@@ -43,7 +43,9 @@ const getDetailSpecialtyById = async (req, res) => {
   }
 };
 module.exports = {
-  postNewSpecialty,
-  getAllSpecialty,
-  getDetailSpecialtyById,
+  postNewClinic,
+  getAllClinic,
+  getDetailClinicById,
+  // getAllSpecialty,
+  // getDetailSpecialtyById,
 };

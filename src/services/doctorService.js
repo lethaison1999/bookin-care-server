@@ -1,5 +1,6 @@
 import db from '../models/index';
 require('dotenv').config();
+import emailService from '../services/emailService';
 import _ from 'lodash';
 const MAX_NUMBER_SCHEDULE = process.env.MAX_NUMBER_SCHEDULE;
 
@@ -132,7 +133,9 @@ const saveDetailInforDoctor = (inputData) => {
           doctorInfor.addressClinic = inputData.addressClinic;
           doctorInfor.note = inputData.note;
           doctorInfor.specialtyId = inputData.specialtyId;
-          (doctorInfor.clinicId = inputData.clinicId), await doctorInfor.save();
+          doctorInfor.clinicId = inputData.clinicId;
+
+          await doctorInfor.save();
         } else {
           //create
           await db.Doctor_Infor.create({
@@ -394,11 +397,88 @@ const getProfileInforDoctorByIdService = (inputId) => {
         if (data && data.image) {
           data.image = Buffer.from(data.image, 'base64').toString('binary');
         }
-        if (!data)
-          data = { errCode: -1, errMessage: 'doctorId no existing... ' };
+        if (!data) data = { errCode: -1, errMessage: 'doctorId no existing... ' };
         resolve({
           errCode: 0,
           data: data,
+        });
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+const getListPatientForDoctorService = (doctorId, date) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!doctorId || !date) {
+        resolve({
+          errCode: -1,
+          errMessage: 'Missing required parameters',
+        });
+      } else {
+        let data = await db.Booking.findAll({
+          where: { doctorId: doctorId, date: date, statusId: 'S2' },
+          include: [
+            {
+              model: db.User,
+              as: 'patientData',
+              attributes: ['email', 'firstName', 'gender', 'address'], //muon lay cai gi
+              include: [
+                {
+                  model: db.Allcode,
+                  as: 'genderData',
+                  attributes: ['valueVi', 'valueEn'],
+                },
+              ],
+            },
+            {
+              model: db.Allcode,
+              as: 'timeTypeDataPatient',
+              attributes: ['valueEn', 'valueVi'],
+            },
+          ],
+          raw: false, // sequelize obj
+          nest: true, //onj trong obj
+        });
+        resolve({
+          errCode: 0,
+          data: data,
+        });
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+const postSendRemedyService = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!data.email || !data.doctorId || !data.patientId || !data.timeType) {
+        resolve({
+          errCode: -2,
+          errMessage: 'Missing required parameters',
+        });
+      } else {
+        let appointment = await db.Booking.findOne({
+          where: {
+            doctorId: data.doctorId,
+            patientId: data.patientId,
+            timeType: data.timeType,
+            statusId: 'S2',
+          },
+          raw: false, // moi dung dc ham save sequilize
+        });
+        if (appointment) {
+          //update patient status
+          appointment.statusId = 'S3';
+          await appointment.save();
+        }
+        //send email ready
+        await emailService.sendAttachment(data);
+        resolve({
+          errCode: 0,
+          errMessage: 'OK',
         });
       }
     } catch (e) {
@@ -415,4 +495,6 @@ module.exports = {
   getScheduleByDateService: getScheduleByDateService,
   getExtraInforDoctorByIdService: getExtraInforDoctorByIdService,
   getProfileInforDoctorByIdService: getProfileInforDoctorByIdService,
+  getListPatientForDoctorService: getListPatientForDoctorService,
+  postSendRemedyService: postSendRemedyService,
 };

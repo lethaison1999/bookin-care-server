@@ -16,7 +16,9 @@ const postPatientBookAppointmentService = (data) => {
         !data.doctorId ||
         !data.date ||
         !data.timeType ||
-        !data.fullName
+        !data.fullName ||
+        !data.address ||
+        !data.setlectedGender
       ) {
         resolve({
           errCode: -1,
@@ -39,6 +41,9 @@ const postPatientBookAppointmentService = (data) => {
           defaults: {
             email: data.email,
             roleId: 'R3',
+            address: data.address,
+            gender: data.setlectedGender,
+            firstName: data.fullName,
           },
         });
 
@@ -101,6 +106,5 @@ const postVerifyPatientBookAppointmentService = (data) => {
 };
 module.exports = {
   postPatientBookAppointmentService: postPatientBookAppointmentService,
-  postVerifyPatientBookAppointmentService:
-    postVerifyPatientBookAppointmentService,
+  postVerifyPatientBookAppointmentService: postVerifyPatientBookAppointmentService,
 };
